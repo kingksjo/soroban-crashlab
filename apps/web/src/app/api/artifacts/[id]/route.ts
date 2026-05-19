@@ -6,16 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-
-// Reference to the same in-memory store from parent route
-// In production, this would be a proper database or service
-const artifactStore: Map<string, {
-  id: string;
-  name: string;
-  createdAt: string;
-  sizeBytes: number;
-  buffer: Buffer;
-}> = new Map();
+import { artifactStore } from '@/lib/artifact-store';
 
 /**
  * GET /api/artifacts/[id]

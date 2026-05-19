@@ -60,7 +60,6 @@ import AddResponsiveLayoutImprovements from "./add-responsive-layout-improvement
 import AddKeyboardNavigationHelp from "./add-keyboard-navigation-help";
 import AddRunAnnotations from "./add-run-annotations";
 import AddRunReplayUi from "./add-run-replay-ui";
-import NotificationCenter from "./add-notification-center-ui";
 import BulkActionsForRuns, { BulkAction } from "./add-bulk-actions-for-runs";
 import AddDownloadableRunArtifactBundle from "./add-downloadable-run-artifact-bundle";
 import CampaignConfigForm from "./CampaignConfigForm";
@@ -605,13 +604,8 @@ function HomeContent() {
         className="flex flex-col items-center justify-center py-20 px-8 max-w-5xl mx-auto w-full responsive-container"
       >
         <AddKeyboardNavigationHelp />
-        <div
-          id="main-content"
-          className="flex flex-col items-center justify-center py-20 px-8 max-w-5xl mx-auto w-full"
-        >
           {/* Role toggle */}
           <div className="w-full flex flex-wrap justify-end gap-3 mb-6">
-            <NotificationCenter />
             <button
               type="button"
               onClick={handleOpenOnboardingChecklist}
@@ -1333,7 +1327,6 @@ function HomeContent() {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

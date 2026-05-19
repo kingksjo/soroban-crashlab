@@ -6,16 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-
-// In-memory storage for demonstration purposes
-// In production, this would connect to the Rust backend or cloud storage
-const artifactStore: Map<string, {
-  id: string;
-  name: string;
-  createdAt: string;
-  sizeBytes: number;
-  buffer: Buffer;
-}> = new Map();
+import { artifactStore, listArtifactMetadata } from '@/lib/artifact-store';
 
 /**
  * POST /api/artifacts
@@ -77,15 +68,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
-    const artifacts = Array.from(artifactStore.values()).map(art => ({
-      id: art.id,
-      name: art.name,
-      createdAt: art.createdAt,
-      sizeBytes: art.sizeBytes,
-    }));
-
-    // Sort by creation date, newest first
-    artifacts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const artifacts = listArtifactMetadata();
 
     return NextResponse.json({
       artifacts,
