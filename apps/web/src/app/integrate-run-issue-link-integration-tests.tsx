@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { RunIssueLink } from "./types";
 
 /**
@@ -56,22 +56,17 @@ export default function IntegrateRunIssueLinkIntegrationTests() {
   const [tests, setTests] = useState<IntegrationTest[]>(INTEGRATION_TESTS);
   const [selectedRun, setSelectedRun] = useState<string>("run-1001");
   const [issueNumber, setIssueNumber] = useState<string>("");
-  const [linkedIssues, setLinkedIssues] = useState<RunIssueLink[]>([]);
+  const [linkedIssues, setLinkedIssues] = useState<RunIssueLink[]>(() => [
+    {
+      label: "GH-248",
+      href: "https://github.com/SorobanCrashLab/soroban-crashlab/issues/248",
+    },
+    {
+      label: "GH-251",
+      href: "https://github.com/SorobanCrashLab/soroban-crashlab/issues/251",
+    },
+  ]);
   const [isRunningTests, setIsRunningTests] = useState(false);
-
-  useEffect(() => {
-    // Simulate loading linked issues
-    setLinkedIssues([
-      {
-        label: "GH-248",
-        href: "https://github.com/SorobanCrashLab/soroban-crashlab/issues/248",
-      },
-      {
-        label: "GH-251",
-        href: "https://github.com/SorobanCrashLab/soroban-crashlab/issues/251",
-      },
-    ]);
-  }, []);
 
   const handleToggleTracker = (id: string) => {
     setTrackers((prev) => toggleTrackerEnabled(prev, id));

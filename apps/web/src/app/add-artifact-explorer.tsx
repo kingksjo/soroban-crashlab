@@ -134,7 +134,7 @@ export default function ArtifactExplorer() {
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-zinc-50 dark:bg-zinc-900/50 text-zinc-400 text-[10px] font-bold uppercase tracking-[0.1em]">
+            <tr className="bg-zinc-50 dark:bg-zinc-900/50 text-zinc-400 text-[10px] font-bold uppercase tracking-widest">
               <th className="px-6 py-4">Artifact Metadata</th>
               <th className="px-6 py-4">Type</th>
               <th className="px-6 py-4">Size</th>

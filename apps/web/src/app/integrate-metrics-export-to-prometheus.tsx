@@ -160,7 +160,7 @@ export default function MetricsExportToPrometheus() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Latency Chart */}
-        <div className="lg:col-span-2 rounded-[2rem] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 shadow-sm overflow-hidden">
+        <div className="lg:col-span-2 rounded-4xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Push Latency</h3>
@@ -172,7 +172,7 @@ export default function MetricsExportToPrometheus() {
             </div>
           </div>
           
-          <div className="h-[240px] w-full">
+          <div className="h-60 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={latencyData}>
                 <defs>
@@ -215,7 +215,7 @@ export default function MetricsExportToPrometheus() {
         </div>
 
         {/* Configuration Panel */}
-        <div className="rounded-[2rem] border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30 p-6 flex flex-col">
+        <div className="rounded-4xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30 p-6 flex flex-col">
           <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 mb-4">Export Config</h3>
           
           <div className="flex-1 space-y-4">
@@ -300,8 +300,8 @@ export default function MetricsExportToPrometheus() {
       </div>
 
       {/* Observability Guide */}
-      <div className="flex items-start gap-4 p-6 rounded-[2rem] border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/10">
-        <div className="flex-shrink-0 p-3 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none">
+      <div className="flex items-start gap-4 p-6 rounded-4xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/50 dark:bg-blue-950/10">
+        <div className="shrink-0 p-3 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200 dark:shadow-none">
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>

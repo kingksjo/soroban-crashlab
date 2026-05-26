@@ -211,12 +211,41 @@ export default function AlertingSettingsPage({
   }, [applySnapshot, clearLoadTimer]);
 
   useEffect(() => {
-    scheduleLoad();
+    loadTimerRef.current = window.setTimeout(() => {
+      try {
+        const storedValue = window.localStorage.getItem(
+          ALERTING_SETTINGS_STORAGE_KEY,
+        );
+        const result = readAlertingSettingsSnapshot(storedValue);
+
+        if (result.status === 'error' || !result.snapshot) {
+          setSettings(null);
+          setErrorMessage(
+            result.error ?? 'Unable to load alerting settings.',
+          );
+          setLoadState('error');
+          return;
+        }
+
+        if (storedValue === null) {
+          window.localStorage.setItem(
+            ALERTING_SETTINGS_STORAGE_KEY,
+            serializeAlertingSettingsSnapshot(result.snapshot),
+          );
+        }
+
+        applySnapshot(result.snapshot);
+      } catch {
+        setSettings(null);
+        setErrorMessage('Unable to access browser storage for alerting settings.');
+        setLoadState('error');
+      }
+    }, 250);
     return () => {
       clearLoadTimer();
       clearSaveTimer();
     };
-  }, [clearLoadTimer, clearSaveTimer, scheduleLoad]);
+  }, [applySnapshot, clearLoadTimer, clearSaveTimer]);
 
   useEffect(() => {
     if (statusMessage === null) return;
