@@ -159,7 +159,7 @@ pub fn run_simulation_with_timeout<F>(
 where
     F: FnOnce(&CaseSeed) -> CrashSignature + Send + 'static,
 {
-    run_simulation_with_timeout_seeded_runner(seed, config, |_s| simulator(_s))
+    run_simulation_with_timeout_seeded_runner(seed, config, simulator)
 }
 
 /// Like [`run_simulation_with_timeout`], but accepts a runner-like closure.

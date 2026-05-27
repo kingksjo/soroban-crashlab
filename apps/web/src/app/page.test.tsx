@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Home from './page';
 import { FuzzingRun } from './types';
+import { DashboardFilters } from './create-advanced-dashboard-filters-page';
 
 // Mock Next.js navigation hooks
 jest.mock('next/navigation', () => ({
@@ -46,7 +47,7 @@ jest.mock('./ReportModal', () => ({
 
 jest.mock('./create-advanced-dashboard-filters-page', () => ({
   __esModule: true,
-  default: ({ filters, onFiltersChange }: any) => (
+  default: ({ filters, onFiltersChange }: { filters: DashboardFilters; onFiltersChange: (filters: DashboardFilters) => void }) => (
     <div data-testid="dashboard-filters">
       <button
         data-testid="set-status-filter"
@@ -113,7 +114,7 @@ jest.mock('./create-advanced-dashboard-filters-page', () => ({
       </button>
     </div>
   ),
-  DashboardFilters: {} as any,
+  DashboardFilters: {} as DashboardFilters,
 }));
 
 // Mock all other components
@@ -536,7 +537,7 @@ describe('Dashboard Filters Integration in filteredRuns', () => {
       const customButton = document.createElement('button');
       customButton.setAttribute('data-testid', 'set-no-match-filter');
       customButton.onclick = () => {
-        const onFiltersChange = (dashboardFilters as any).__reactProps$?.onFiltersChange;
+        const onFiltersChange = (dashboardFilters as unknown as { __reactProps$?: { onFiltersChange?: (filters: DashboardFilters) => void } }).__reactProps$?.onFiltersChange;
         if (onFiltersChange) {
           onFiltersChange({
             status: [],

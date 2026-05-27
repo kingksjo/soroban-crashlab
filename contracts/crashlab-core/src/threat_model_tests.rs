@@ -6,6 +6,7 @@
 #[cfg(test)]
 mod threat_model_tests {
     use crate::*;
+    use crate::seed_validator::Validate;
 
     // ── T-1: Path Traversal Prevention ────────────────────────────────────────
 
@@ -69,7 +70,7 @@ mod threat_model_tests {
         let result = schema.validate(&oversized);
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| matches!(e, SeedValidationError::PayloadTooLarge { .. })));
+        assert!(errors.iter().any(|e| matches!(e, SeedValidationError::PayloadTooLong { .. })));
     }
 
     #[test]
@@ -83,7 +84,7 @@ mod threat_model_tests {
         let result = schema.validate(&empty);
         assert!(result.is_err());
         let errors = result.unwrap_err();
-        assert!(errors.iter().any(|e| matches!(e, SeedValidationError::PayloadTooSmall { .. })));
+        assert!(errors.iter().any(|e| matches!(e, SeedValidationError::PayloadTooShort { .. })));
     }
 
     #[test]
@@ -314,7 +315,7 @@ mod threat_model_tests {
         policy.max_failure_bundles = 5;
         
         let bundles: Vec<CaseBundleDocument> = (0..10)
-            .map(|i| to_bundle(CaseSeed { id: i, payload: vec![i as u8] }))
+            .map(|i| to_bundle_document(CaseSeed { id: i, payload: vec![i as u8] }))
             .collect();
 
         let retained = policy.retain_failure_bundles(&bundles);
@@ -337,7 +338,7 @@ mod threat_model_tests {
         let checkpoints: Vec<RunCheckpoint> = (0..5)
             .map(|i| {
                 let mut ck = RunCheckpoint::new_run("campaign_1", &[dummy_seed.clone()]);
-                ck.next_seed_index = (i * 100) as u64;
+                ck.next_seed_index = i * 100;
                 ck
             })
             .collect();
@@ -347,7 +348,7 @@ mod threat_model_tests {
         // Should keep only 2 most advanced
         assert_eq!(retained.iter().filter(|&&b| b).count(), 2);
         let kept_indices: Vec<u64> = checkpoints.iter().enumerate()
-            .filter_map(|(i, c)| if retained[i] { Some(c.next_seed_index) } else { None })
+            .filter_map(|(i, c)| if retained[i] { Some(c.next_seed_index as u64) } else { None })
             .collect();
         assert!(kept_indices.contains(&400));
         assert!(kept_indices.contains(&300));
