@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import type { LedgerStateChange } from '../../types';
-import { buildMockRuns } from '../../mockRuns';
+import type { FuzzingRun, LedgerStateChange } from '../../types';
 import RunIssueLinkPage53 from '../../add-run-issue-link-page-53';
 import RunStatusTimeline from '../../RunStatusTimeline';
 import DownloadArtifactsButton from './DownloadArtifactsButton';
@@ -41,9 +40,17 @@ const changeBadge = {
 const formatBytes = (bytes: number): string => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 const formatDate = (value?: string): string => (value ? new Date(value).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }) : 'Pending');
 
+async function fetchRun(id: string): Promise<FuzzingRun | null> {
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const res = await fetch(`${base}/api/runs/${encodeURIComponent(id)}`, { cache: 'no-store' });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Failed to fetch run ${id}`);
+    return res.json() as Promise<FuzzingRun>;
+}
+
 export default async function RunDetailPage({ params }: RunDetailPageProps) {
     const { id } = await params;
-    const run = buildMockRuns().find((entry) => entry.id === id);
+    const run = await fetchRun(id);
 
     if (!run) {
         notFound();

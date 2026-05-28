@@ -67,7 +67,6 @@ import ContributorSLATargets from "./ContributorSLATargets";
 import { CampaignConfig } from "./types";
 import { ResourceFeeInsightPanel } from "./implement-resource-fee-insight-panel-component";
 import AdvancedDashboardFilters, { DashboardFilters } from "./create-advanced-dashboard-filters-page";
-import { buildMockRuns } from "./mockRuns";
 
 const ITEMS_PER_PAGE = 10;
 const CPU_WARNING = 900_000;
@@ -146,8 +145,6 @@ function HomeContent() {
     searchTerm: '',
   });
 
-  // Check if demo loading mode is enabled via query flag
-  const demoLoading = searchParams.get("demoLoading") === "1";
 
   const handleToggleRunSelection = useCallback((runId: string) => {
     setSelectedRunIds(prev => {
@@ -365,26 +362,16 @@ function HomeContent() {
   // non-urgent update, which avoids the react-hooks/set-state-in-effect lint rule.
   useEffect(() => {
     let cancelled = false;
-    // Mark the loading reset as a low-priority transition so React batches it
-    // together with any concurrent work, avoiding a synchronous setState in effect.
     const ctrl = new AbortController();
     const resetAndFetch = async () => {
       setDataState("loading");
       setRuns([]);
       try {
-        // Simulate a network round-trip (800ms)
-        await new Promise<void>((resolve, reject) => {
-          const t = window.setTimeout(() => {
-            if (ctrl.signal.aborted) return;
-            // Only simulate failure when demoLoading flag is present
-            if (demoLoading && Math.random() < 0.1)
-              reject(new Error("Simulated network error"));
-            else resolve();
-          }, 800);
-          ctrl.signal.addEventListener("abort", () => window.clearTimeout(t));
-        });
+        const res = await fetch('/api/runs', { signal: ctrl.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
         if (!cancelled) {
-          setRuns(buildMockRuns());
+          setRuns(data.runs);
           setDataState("success");
         }
       } catch {
@@ -400,7 +387,7 @@ function HomeContent() {
       ctrl.abort();
       window.clearTimeout(t);
     };
-  }, [fetchAttempt, demoLoading]);
+  }, [fetchAttempt]);
 
   useEffect(() => {
     if (selectedRunId && !selectedRun) {
