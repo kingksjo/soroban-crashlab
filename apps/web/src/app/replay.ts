@@ -1,10 +1,36 @@
+export interface ReplayApiResponse {
+    ok: boolean;
+    runId: string;
+    newRunId: string;
+    command: string;
+    args: string[];
+    stdout: string;
+    stderr: string;
+    exitCode: number;
+    bundleJson: string;
+    error?: string;
+}
+
 /**
- * Simulates scheduling a seed replay for the dashboard (no backend in this demo).
+ * Invokes the replay API for a source run and returns the queued replay run id.
  */
 export async function simulateSeedReplay(sourceRunId: string): Promise<{ newRunId: string }> {
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    const suffix = typeof crypto !== 'undefined' && 'randomUUID' in crypto
-        ? crypto.randomUUID().slice(0, 8)
-        : Math.random().toString(36).slice(2, 10);
-    return { newRunId: `replay-${sourceRunId}-${suffix}` };
+    const response = await fetch(`/api/runs/${encodeURIComponent(sourceRunId)}/replay`, {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+        },
+    });
+
+    const payload = (await response.json()) as Partial<ReplayApiResponse>;
+
+    if (!response.ok || !payload.ok || typeof payload.newRunId !== 'string') {
+        throw new Error(
+            typeof payload.error === 'string'
+                ? payload.error
+                : `Replay request failed with HTTP ${response.status}`,
+        );
+    }
+
+    return { newRunId: payload.newRunId };
 }
