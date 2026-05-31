@@ -22,6 +22,7 @@ import {
   SorobanAuthMode,
   AuthProvider,
   AuthModeProbeResult,
+  createExternalAuthAdapter,
   formatVerified
 } from './integrate-external-authentication-integration-utils';
 
@@ -101,7 +102,7 @@ const MODE_PROBE_STYLES: Record<AuthModeProbeResult['status'], string> = {
   untested: 'text-zinc-400 dark:text-zinc-500',
 };
 
-
+const authAdapter = createExternalAuthAdapter();
 
 export default function ExternalAuthenticationIntegration() {
   const [providers, setProviders] = useState<AuthProvider[]>(INITIAL_PROVIDERS);
@@ -109,31 +110,29 @@ export default function ExternalAuthenticationIntegration() {
   const [probingMode, setProbingMode] = useState<SorobanAuthMode | null>(null);
 
   const connect = (id: string) => {
+    const provider = providers.find((p) => p.id === id);
+    if (!provider) return;
+
     setProviders((prev) =>
       prev.map((p) => (p.id === id ? { ...p, status: 'connecting', errorMessage: undefined } : p))
     );
-    setTimeout(() => {
+
+    void authAdapter.connectProvider(provider).then((connectedProvider) => {
       setProviders((prev) =>
-        prev.map((p) =>
-          p.id === id
-            ? {
-                ...p,
-                status: 'connected',
-                identity: p.type === 'stellar-wallet' ? 'GAQX...KBTZ' : p.identity ?? 'user@example.com',
-                lastVerified: new Date().toISOString(),
-              }
-            : p
-        )
+        prev.map((p) => (p.id === id ? connectedProvider : p))
       );
-    }, 1200);
+    });
   };
 
   const disconnect = (id: string) => {
-    setProviders((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, status: 'disconnected', identity: undefined, lastVerified: undefined } : p
-      )
-    );
+    const provider = providers.find((p) => p.id === id);
+    if (!provider) return;
+
+    void authAdapter.disconnectProvider(provider).then((disconnectedProvider) => {
+      setProviders((prev) =>
+        prev.map((p) => (p.id === id ? disconnectedProvider : p))
+      );
+    });
   };
 
   const probeMode = (mode: SorobanAuthMode) => {
@@ -141,16 +140,13 @@ export default function ExternalAuthenticationIntegration() {
     setProbeResults((prev) =>
       prev.map((r) => (r.mode === mode ? { ...r, status: 'untested', notes: undefined } : r))
     );
-    setTimeout(() => {
+
+    void authAdapter.probeAuthMode(mode).then((probeResult) => {
       setProbeResults((prev) =>
-        prev.map((r) =>
-          r.mode === mode
-            ? { ...r, status: 'ok', notes: `Probe completed — no divergence detected under ${mode}.` }
-            : r
-        )
+        prev.map((r) => (r.mode === mode ? probeResult : r))
       );
       setProbingMode(null);
-    }, 1400);
+    });
   };
 
   const connectedCount = providers.filter((p) => p.status === 'connected').length;
