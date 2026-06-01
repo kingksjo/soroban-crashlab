@@ -106,6 +106,87 @@ impl ContractRunner for MockRunner {
     }
 }
 
+/// Error type for runner creation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RunnerCreationError {
+    /// Invalid runner type specified in `CRASHLAB_RUNNER` environment variable.
+    InvalidRunnerType {
+        /// The invalid runner type value.
+        runner_type: String,
+    },
+    /// The requested runner type requires a feature that is not enabled.
+    FeatureNotEnabled {
+        /// Name of the required feature.
+        feature: String,
+        /// The requested runner type.
+        runner_type: String,
+    },
+}
+
+impl std::fmt::Display for RunnerCreationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RunnerCreationError::InvalidRunnerType { runner_type } => {
+                write!(f, "invalid runner type: '{}'. Supported types: mock, host", runner_type)
+            }
+            RunnerCreationError::FeatureNotEnabled { feature, runner_type } => {
+                write!(f, "runner type '{}' requires the '{}' feature to be enabled", runner_type, feature)
+            }
+        }
+    }
+}
+
+impl std::error::Error for RunnerCreationError {}
+
+/// Creates a [`ContractRunner`] based on the `CRASHLAB_RUNNER` environment variable.
+///
+/// # Environment Variable
+/// The `CRASHLAB_RUNNER` environment variable controls which runner implementation is used:
+/// - `"mock"` (or unset): Creates a [`MockRunner`] for testing purposes.
+/// - `"host"`: Creates a [`HostContractRunner`] for Soroban SDK testutils-based execution.
+///   This requires the `host-runner` feature to be enabled.
+///
+/// # Errors
+/// Returns [`RunnerCreationError`] if:
+/// - The `CRASHLAB_RUNNER` value is not a recognized runner type.
+/// - A requested runner type requires an unmet feature.
+///
+/// # Examples
+/// ```rust,no_run
+/// # use crashlab_core::runner::create_runner;
+/// // With CRASHLAB_RUNNER=mock (or unset):
+/// let mut runner = create_runner().expect("failed to create runner");
+///
+/// // With CRASHLAB_RUNNER=host (requires host-runner feature):
+/// # std::env::set_var("CRASHLAB_RUNNER", "host");
+/// # #[cfg(feature = "host-runner")]
+/// # let mut runner = create_runner().expect("failed to create runner");
+/// ```
+pub fn create_runner() -> Result<Box<dyn ContractRunner>, RunnerCreationError> {
+    let runner_type = std::env::var("CRASHLAB_RUNNER")
+        .unwrap_or_else(|_| "mock".to_string());
+
+    match runner_type.as_str() {
+        "mock" => Ok(Box::new(MockRunner::default())),
+        "host" => {
+            #[cfg(feature = "host-runner")]
+            {
+                Ok(Box::new(crate::host_runner::HostContractRunner::new()))
+            }
+            #[cfg(not(feature = "host-runner"))]
+            {
+                Err(RunnerCreationError::FeatureNotEnabled {
+                    feature: "host-runner".to_string(),
+                    runner_type: "host".to_string(),
+                })
+            }
+        }
+        _ => Err(RunnerCreationError::InvalidRunnerType {
+            runner_type,
+        }),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -178,6 +259,104 @@ mod tests {
                 message: "missing contract id".to_string(),
             }
         );
+    }
+
+    #[test]
+    fn create_runner_defaults_to_mock_when_env_unset() {
+        // Ensure CRASHLAB_RUNNER is unset
+        std::env::remove_var("CRASHLAB_RUNNER");
+
+        let runner = create_runner();
+        assert!(runner.is_ok(), "create_runner should succeed with no env var");
+    }
+
+    #[test]
+    fn create_runner_creates_mock_when_env_is_mock() {
+        std::env::set_var("CRASHLAB_RUNNER", "mock");
+
+        let runner = create_runner();
+        assert!(runner.is_ok(), "create_runner should succeed with CRASHLAB_RUNNER=mock");
+    }
+
+    #[test]
+    fn create_runner_rejects_invalid_runner_type() {
+        std::env::set_var("CRASHLAB_RUNNER", "invalid");
+
+        let result = create_runner();
+        assert!(result.is_err(), "create_runner should fail with invalid runner type");
+        
+        if let Err(err) = result {
+            assert_eq!(
+                err,
+                RunnerCreationError::InvalidRunnerType {
+                    runner_type: "invalid".to_string(),
+                }
+            );
+        }
+    }
+
+    #[test]
+    fn create_runner_rejects_host_without_feature() {
+        std::env::set_var("CRASHLAB_RUNNER", "host");
+
+        #[cfg(not(feature = "host-runner"))]
+        {
+            let result = create_runner();
+            assert!(result.is_err(), "create_runner should fail without host-runner feature");
+            
+            if let Err(err) = result {
+                assert_eq!(
+                    err,
+                    RunnerCreationError::FeatureNotEnabled {
+                        feature: "host-runner".to_string(),
+                        runner_type: "host".to_string(),
+                    }
+                );
+            }
+        }
+
+        #[cfg(feature = "host-runner")]
+        {
+            let runner = create_runner();
+            assert!(runner.is_ok(), "create_runner should succeed with host-runner feature and CRASHLAB_RUNNER=host");
+        }
+    }
+
+    #[test]
+    fn runner_creation_error_display_invalid_type() {
+        let err = RunnerCreationError::InvalidRunnerType {
+            runner_type: "xyz".to_string(),
+        };
+
+        assert_eq!(
+            err.to_string(),
+            "invalid runner type: 'xyz'. Supported types: mock, host"
+        );
+    }
+
+    #[test]
+    fn runner_creation_error_display_feature_not_enabled() {
+        let err = RunnerCreationError::FeatureNotEnabled {
+            feature: "host-runner".to_string(),
+            runner_type: "host".to_string(),
+        };
+
+        assert_eq!(
+            err.to_string(),
+            "runner type 'host' requires the 'host-runner' feature to be enabled"
+        );
+    }
+
+    #[test]
+    fn mock_runner_from_factory_executes_seed() {
+        std::env::set_var("CRASHLAB_RUNNER", "mock");
+
+        let mut runner = create_runner().expect("failed to create runner");
+        let seed = CaseSeed { id: 42, payload: vec![1, 2, 3] };
+
+        let sig = runner.run_seed(&seed).expect("seed execution failed");
+        assert_eq!(sig.digest, 42);
+        assert_eq!(sig.category, "runtime-failure");
     }
 }
 

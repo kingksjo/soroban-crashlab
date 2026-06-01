@@ -11,6 +11,8 @@ pub mod fixture_classifier;
 pub mod suite_runner;
 pub mod runner;
 
+pub use runner::{ContractRunner, RunnerError, RunnerCreationError, create_runner, MockRunner};
+
 #[cfg(feature = "host-runner")]
 pub mod host_runner;
 
