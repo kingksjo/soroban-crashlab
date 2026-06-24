@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 export type NotificationType = 'info' | 'success' | 'warning' | 'error';
 export type NotificationPriority = 'low' | 'medium' | 'high' | 'critical';
@@ -23,69 +23,35 @@ interface NotificationCenterProps {
   className?: string;
 }
 
-// Mock notifications for demonstration
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: 'notif-1',
-    type: 'error',
-    priority: 'critical',
-    title: 'Critical Failure Detected',
-    message: 'Run run-1023 encountered a panic in contract::transfer. Immediate attention required.',
-    timestamp: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
-    read: false,
-    actionLabel: 'View Details',
-    actionUrl: '/runs/run-1023',
+const POLL_INTERVAL_MS = 30000;
+
+type FeedItem = {
+  id: string;
+  title: string;
+  message: string;
+  severity: 'info' | 'success' | 'warning' | 'error';
+  createdAt: string;
+  read: boolean;
+};
+
+function mapFeedItemToNotification(item: FeedItem): Notification {
+  const priorityMap: Record<string, NotificationPriority> = {
+    error: 'critical',
+    warning: 'high',
+    success: 'medium',
+    info: 'low',
+  };
+  return {
+    id: item.id,
+    type: item.severity,
+    priority: priorityMap[item.severity] ?? 'low',
+    title: item.title,
+    message: item.message,
+    timestamp: new Date(item.createdAt),
+    read: item.read,
     dismissible: true,
-    runId: 'run-1023'
-  },
-  {
-    id: 'notif-2',
-    type: 'warning',
-    priority: 'high',
-    title: 'Resource Usage Alert',
-    message: 'Run run-1022 exceeded memory threshold (8.5MB). Consider optimizing contract logic.',
-    timestamp: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
-    read: false,
-    actionLabel: 'Analyze',
-    actionUrl: '/runs/run-1022',
-    dismissible: true,
-    runId: 'run-1022'
-  },
-  {
-    id: 'notif-3',
-    type: 'success',
-    priority: 'medium',
-    title: 'Campaign Completed',
-    message: 'Fuzzing campaign "Token Transfer Tests" completed successfully with 50,000 seeds.',
-    timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-    read: true,
-    actionLabel: 'View Report',
-    dismissible: true
-  },
-  {
-    id: 'notif-4',
-    type: 'info',
-    priority: 'low',
-    title: 'System Update',
-    message: 'CrashLab has been updated to v2.1.0 with improved mutation algorithms.',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    read: true,
-    dismissible: true
-  },
-  {
-    id: 'notif-5',
-    type: 'warning',
-    priority: 'medium',
-    title: 'Invariant Violation',
-    message: 'Property assertion failed in run run-1021: balance should never be negative.',
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
-    read: false,
-    actionLabel: 'Investigate',
-    actionUrl: '/runs/run-1021',
-    dismissible: true,
-    runId: 'run-1021'
-  }
-];
+  };
+}
 
 export default function NotificationCenter({ className = '' }: NotificationCenterProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -93,16 +59,59 @@ export default function NotificationCenter({ className = '' }: NotificationCente
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Load notifications on mount
-  useEffect(() => {
-    // Use a timeout to avoid synchronous setState in effect
-    const timer = setTimeout(() => {
-      setNotifications(MOCK_NOTIFICATIONS);
-    }, 0);
-    
-    return () => clearTimeout(timer);
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch('/api/notifications');
+      if (!res.ok) return;
+      const data = await res.json();
+      const feed: FeedItem[] = data.notifications ?? [];
+      const mapped = feed.map(mapFeedItemToNotification);
+      setNotifications((prev) => {
+        const prevIds = new Set(prev.map((n) => n.id));
+        const merged = prev.filter((n) => feed.some((f) => f.id === n.id));
+        for (const item of mapped) {
+          if (!prevIds.has(item.id)) {
+            merged.push(item);
+          } else {
+            const existing = prev.find((n) => n.id === item.id);
+            if (existing) merged.push({ ...item, read: existing.read });
+          }
+        }
+        return merged;
+      });
+    } catch {
+      // silently fail — keep existing notifications
+    }
   }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+    intervalRef.current = setInterval(fetchNotifications, POLL_INTERVAL_MS);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [fetchNotifications]);
+
+  useEffect(() => {
+    let mounted = true;
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && mounted) {
+        fetchNotifications();
+      }
+    };
+    const handleFocus = () => {
+      if (mounted) fetchNotifications();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      mounted = false;
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [fetchNotifications]);
 
   // Handle click outside to close dropdown
   useEffect(() => {

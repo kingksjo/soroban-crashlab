@@ -191,6 +191,49 @@ pub fn create_runner() -> Result<Box<dyn ContractRunner>, RunnerCreationError> {
 mod tests {
     use super::*;
     use crate::CaseSeed;
+    use std::sync::{Mutex, MutexGuard};
+
+    static RUNNER_ENV_LOCK: Mutex<()> = Mutex::new(());
+
+    struct RunnerEnvGuard {
+        _lock: MutexGuard<'static, ()>,
+        previous: Option<String>,
+    }
+
+    impl RunnerEnvGuard {
+        fn set(value: &str) -> Self {
+            let lock = RUNNER_ENV_LOCK
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            let previous = std::env::var("CRASHLAB_RUNNER").ok();
+            std::env::set_var("CRASHLAB_RUNNER", value);
+            Self {
+                _lock: lock,
+                previous,
+            }
+        }
+
+        fn unset() -> Self {
+            let lock = RUNNER_ENV_LOCK
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner());
+            let previous = std::env::var("CRASHLAB_RUNNER").ok();
+            std::env::remove_var("CRASHLAB_RUNNER");
+            Self {
+                _lock: lock,
+                previous,
+            }
+        }
+    }
+
+    impl Drop for RunnerEnvGuard {
+        fn drop(&mut self) {
+            match &self.previous {
+                Some(value) => std::env::set_var("CRASHLAB_RUNNER", value),
+                None => std::env::remove_var("CRASHLAB_RUNNER"),
+            }
+        }
+    }
 
     #[test]
     fn mock_runner_returns_signature_for_seed() {
@@ -263,8 +306,7 @@ mod tests {
 
     #[test]
     fn create_runner_defaults_to_mock_when_env_unset() {
-        // Ensure CRASHLAB_RUNNER is unset
-        std::env::remove_var("CRASHLAB_RUNNER");
+        let _env = RunnerEnvGuard::unset();
 
         let runner = create_runner();
         assert!(runner.is_ok(), "create_runner should succeed with no env var");
@@ -272,7 +314,7 @@ mod tests {
 
     #[test]
     fn create_runner_creates_mock_when_env_is_mock() {
-        std::env::set_var("CRASHLAB_RUNNER", "mock");
+        let _env = RunnerEnvGuard::set("mock");
 
         let runner = create_runner();
         assert!(runner.is_ok(), "create_runner should succeed with CRASHLAB_RUNNER=mock");
@@ -280,7 +322,7 @@ mod tests {
 
     #[test]
     fn create_runner_rejects_invalid_runner_type() {
-        std::env::set_var("CRASHLAB_RUNNER", "invalid");
+        let _env = RunnerEnvGuard::set("invalid");
 
         let result = create_runner();
         assert!(result.is_err(), "create_runner should fail with invalid runner type");
@@ -297,7 +339,7 @@ mod tests {
 
     #[test]
     fn create_runner_rejects_host_without_feature() {
-        std::env::set_var("CRASHLAB_RUNNER", "host");
+        let _env = RunnerEnvGuard::set("host");
 
         #[cfg(not(feature = "host-runner"))]
         {
@@ -349,7 +391,7 @@ mod tests {
 
     #[test]
     fn mock_runner_from_factory_executes_seed() {
-        std::env::set_var("CRASHLAB_RUNNER", "mock");
+        let _env = RunnerEnvGuard::set("mock");
 
         let mut runner = create_runner().expect("failed to create runner");
         let seed = CaseSeed { id: 42, payload: vec![1, 2, 3] };

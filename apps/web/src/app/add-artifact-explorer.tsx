@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import ArtifactPreviewModal from './implement-artifact-preview-modal-component';
+import { useDebounce } from '../lib/useDebounce';
 
 export interface Artifact {
   id: string;
@@ -69,6 +70,7 @@ export default function ArtifactExplorer() {
   const [error, setError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [filter, setFilter] = useState<'all' | Artifact['type']>('all');
   const [previewArtifact, setPreviewArtifact] = useState<Artifact | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -103,13 +105,13 @@ export default function ArtifactExplorer() {
 
   const filteredArtifacts = useMemo(() => {
     return artifacts.filter(a => {
-      const matchesSearch = a.name.toLowerCase().includes(search.toLowerCase()) || 
-                            a.runId?.toLowerCase().includes(search.toLowerCase()) ||
-                            a.content_hash?.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch = a.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                            a.runId?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                            a.content_hash?.toLowerCase().includes(debouncedSearch.toLowerCase());
       const matchesFilter = filter === 'all' || a.type === filter;
       return matchesSearch && matchesFilter;
     });
-  }, [artifacts, search, filter]);
+  }, [artifacts, debouncedSearch, filter]);
 
   const handlePreviewArtifact = (artifact: Artifact) => {
     setPreviewArtifact(artifact);

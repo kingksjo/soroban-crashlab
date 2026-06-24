@@ -30,14 +30,264 @@ function DashboardContent() {
       cancelled = true;
       ctrl.abort();
     };
+  }, [fetchAttempt, demoLoading]);
+
+  // Re-fetch data when the page becomes visible again (e.g., after navigating back).
+  useEffect(() => {
+    let mounted = true;
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && mounted) {
+        setFetchAttempt(prev => prev + 1);
+      }
+    };
+    const handleFocus = () => {
+      if (mounted) setFetchAttempt(prev => prev + 1);
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      mounted = false;
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleFocus);
+    };
   }, []);
 
-  const totalRuns = runs.length;
-  const runningRuns = runs.filter((r) => r.status === "running").length;
-  const failedRuns = runs.filter((r) => r.status === "failed").length;
-  const completedRuns = runs.filter((r) => r.status === "completed").length;
-  const criticalRuns = runs.filter((r) => r.severity === "critical").length;
-  const recentRuns = runs.slice(0, 5);
+  useEffect(() => {
+    if (selectedRunId && !selectedRun) {
+      setQueryState({ run: null });
+    }
+  }, [selectedRun, selectedRunId, setQueryState]);
+
+  useEffect(() => {
+    if (currentPage !== clampedPage) {
+      setQueryState({ page: clampedPage === 1 ? null : String(clampedPage) });
+    }
+  }, [clampedPage, currentPage, setQueryState]);
+
+  useEffect(() => {
+    if (reportRunId && !reportRun) {
+      const run = runs.find(r => r.id === reportRunId);
+      if (run) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setReportRun(run);
+      } else if (dataState === "success") {
+        // Clear param if run not found after data loaded
+        setQueryState({ report: null });
+      }
+    }
+  }, [reportRun, reportRunId, runs, dataState, setQueryState]);
+
+  const handleOpenRunDrawer = useCallback(
+    (runId: string) => setQueryState({ run: runId, report: null }),
+    [setQueryState],
+  );
+
+  const handleCloseRunDrawer = useCallback(
+    () => setQueryState({ run: null }),
+    [setQueryState],
+  );
+
+  const handleOpenReport = useCallback(
+    (run: FuzzingRun) => {
+      setReportRun(run);
+      setQueryState({ report: run.id, run: null });
+    },
+    [setQueryState],
+  );
+
+  const handleCloseReport = useCallback(
+    () => {
+      setReportRun(null);
+      setQueryState({ report: null });
+    },
+    [setQueryState],
+  );
+
+  const handleReplayComplete = useCallback(
+    (data: FuzzingRun | { id: string; status: "running" }) => {
+      let newRun: FuzzingRun;
+      if ("area" in data) {
+        newRun = data;
+      } else {
+        newRun = {
+          id: data.id,
+          status: "running",
+          area: "state",
+          severity: "medium",
+          duration: 0,
+          seedCount: 0,
+          crashDetail: null,
+          cpuInstructions: 0,
+          memoryBytes: 0,
+          minResourceFee: 0,
+        };
+      }
+      setRuns((prev) => [newRun, ...prev]);
+    },
+    [],
+  );
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      setQueryState({ page: page <= 1 ? null : String(page) });
+      cardsContainerRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    },
+    [setQueryState],
+  );
+
+  const handleLaunchCampaign = useCallback((config: CampaignConfig) => {
+    console.log("Launching campaign with config:", config);
+    setShowCampaignConfig(false);
+    // Simulate campaign launch by adding a new running run
+    const newRun: FuzzingRun = {
+      id: `run-${Date.now().toString().slice(-4)}`,
+      status: "running",
+      area: "state",
+      severity: "medium",
+      duration: 0,
+      seedCount: 0,
+      crashDetail: null,
+      cpuInstructions: 0,
+      memoryBytes: 0,
+      minResourceFee: 0,
+    };
+    setRuns((prev) => [newRun, ...prev]);
+  }, []);
+
+  const handleCopyPermalink = useCallback(async () => {
+    try {
+      const stableQuery = toStableQueryString(
+        new URLSearchParams(searchParams.toString()),
+      );
+      const permalink = `${window.location.origin}${pathname}${stableQuery ? `?${stableQuery}` : ""}`;
+      await navigator.clipboard.writeText(permalink);
+      setCopyState("copied");
+    } catch {
+      setCopyState("failed");
+    }
+  }, [pathname, searchParams]);
+
+  const handleDashboardFiltersChange = useCallback((filters: DashboardFilters) => {
+    setDashboardFilters(filters);
+    setQueryState({ page: null });
+  }, [setQueryState]);
+
+  const handleDashboardFiltersReset = useCallback(() => {
+    setDashboardFilters({
+      status: [],
+      area: [],
+      severity: [],
+      dateRange: { start: '', end: '' },
+      durationRange: { min: 0, max: 0 },
+      resourceFeeRange: { min: 0, max: 0 },
+      hasCrash: null,
+      searchTerm: '',
+    });
+    setQueryState({ page: null });
+  }, [setQueryState]);
+
+  useEffect(() => {
+    if (copyState === "idle") return;
+    const timer = window.setTimeout(() => setCopyState("idle"), 1800);
+    return () => window.clearTimeout(timer);
+  }, [copyState]);
+
+  const cards = [
+    {
+      title: "Intelligent Mutation",
+      description:
+        "Automatically mutate transaction envelopes and inputs to explore complex state transitions specific to Soroban.",
+      icon: "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z",
+      color: "blue",
+      details:
+        "Our intelligent mutation engine uses advanced algorithms to systematically explore the state space of your Soroban contracts. It generates meaningful test cases by mutating transaction parameters, account states, and contract inputs in ways that are likely to expose edge cases and vulnerabilities.",
+    },
+    {
+      title: "Invariant Testing",
+      description:
+        "Define robust invariants and property assertions. We run permutations to ensure they hold up under stress.",
+      icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
+      color: "purple",
+      details:
+        "Property-based testing for Soroban contracts. Define invariants that should always hold true, and our fuzzer will attempt to break them through millions of randomized test cases. When an invariant is violated, we provide a minimal reproducible example.",
+    },
+    {
+      title: "Actionable Reports",
+      description:
+        "Get actionable, detailed execution traces when our fuzzer detects a crash, panic, or invariant breach.",
+      icon: "M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+      color: "green",
+      details:
+        "When issues are found, CrashLab generates comprehensive reports including full execution traces, contract state at the time of failure, and suggested fixes. Reports are formatted for easy integration into your CI/CD pipeline.",
+    },
+  ];
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const runDrawerOpen = Boolean(searchParams.get("run"));
+      if (runDrawerOpen && e.key === "Escape") {
+        e.preventDefault();
+        handleCloseRunDrawer();
+        return;
+      }
+      if (showDetailView && e.key !== "Escape") return;
+
+      switch (e.key) {
+        case "ArrowDown":
+        case "ArrowRight":
+          e.preventDefault();
+          setSelectedCardIndex((prev) => (prev + 1) % cards.length);
+          break;
+        case "ArrowUp":
+        case "ArrowLeft":
+          e.preventDefault();
+          setSelectedCardIndex(
+            (prev) => (prev - 1 + cards.length) % cards.length,
+          );
+          break;
+        case "Enter":
+          e.preventDefault();
+          setShowDetailView(true);
+          break;
+        case "Escape":
+          e.preventDefault();
+          if (showDetailView) {
+            setShowDetailView(false);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showDetailView, cards.length, searchParams, handleCloseRunDrawer]);
+
+  const handleCardClick = (index: number) => {
+    setSelectedCardIndex(index);
+    setShowDetailView(true);
+  };
+
+  const handleOpenOnboardingChecklist = useCallback(() => {
+    setShowOnboardingChecklist(true);
+    try {
+      localStorage.setItem(ONBOARDING_SEEN_STORAGE_KEY, "true");
+      localStorage.setItem(ONBOARDING_DISMISSED_STORAGE_KEY, "false");
+    } catch {
+      // ignore storage write errors
+    }
+  }, []);
+
+  const handleCloseOnboardingChecklist = useCallback(() => {
+    setShowOnboardingChecklist(false);
+    try {
+      localStorage.setItem(ONBOARDING_DISMISSED_STORAGE_KEY, "true");
+    } catch {
+      // ignore storage write errors
+    }
+  }, []);
 
   return (
     <div className="container-full page-padding fade-in">

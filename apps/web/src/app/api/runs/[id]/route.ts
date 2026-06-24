@@ -46,14 +46,14 @@ export async function GET(
         return NextResponse.json({ error: 'Upstream error' }, { status: 502 });
       }
       const data = (await upstream.json()) as unknown;
-      return NextResponse.json(data);
+      return NextResponse.json(data, { headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } });
     }
 
     const run = findRunById(id);
     if (!run) {
       return NextResponse.json({ error: 'Run not found' }, { status: 404 });
     }
-    return NextResponse.json(run);
+    return NextResponse.json(run, { headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } });
   } catch (error) {
     logger.error('GET /api/runs/[id] failed', { error });
     return NextResponse.json({ error: 'Failed to fetch run' }, { status: 500 });

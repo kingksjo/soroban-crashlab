@@ -20,6 +20,7 @@ import {
   logEntryAnchorHref,
   type PageDataState,
 } from './log-viewer-page-utils';
+import { useDebounce } from '../../lib/useDebounce';
 
 // ---------------------------------------------------------------------------
 // Mock data loader (replace with real API call when backend is wired)
@@ -109,6 +110,7 @@ export default function LogViewerPage() {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [levelFilter, setLevelFilter] = useState<LogLevelFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [fetchAttempt, setFetchAttempt] = useState(0);
 
   useEffect(() => {
@@ -133,10 +135,10 @@ export default function LogViewerPage() {
 
   const visible = useMemo(
     () =>
-      filterLogEntries(entries, { level: levelFilter, query: searchQuery }).sort(
+      filterLogEntries(entries, { level: levelFilter, query: debouncedSearchQuery }).sort(
         (a, b) => a.timestamp - b.timestamp,
       ),
-    [entries, levelFilter, searchQuery],
+    [entries, levelFilter, debouncedSearchQuery],
   );
 
   return (

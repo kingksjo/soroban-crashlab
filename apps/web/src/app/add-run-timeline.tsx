@@ -297,7 +297,7 @@ export default function AddRunTimeline({
       <div className="relative mt-8 md:mt-12 pb-4 md:pb-6 overflow-x-auto" role="application" aria-label="Timeline visualization">
         <div className="absolute inset-0 flex justify-between pointer-events-none border-x border-zinc-100 dark:border-zinc-800 min-w-[600px]" aria-hidden="true">
           {[0, 0.25, 0.5, 0.75, 1].map((p) => (
-            <div key={p} className="relative h-full border-r border-zinc-100 dark:border-zinc-800 last:border-0">
+            <div key={`${p * 100}%`} className="relative h-full border-r border-zinc-100 dark:border-zinc-800 last:border-0">
               <span className="absolute -top-6 md:-top-8 left-1/2 -translate-x-1/2 text-[9px] md:text-[10px] font-mono font-bold text-zinc-400 bg-white px-1.5 md:px-2 py-0.5 rounded-full dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 whitespace-nowrap">
                 {formatTime(minTime + (p * timeRange))}
               </span>
