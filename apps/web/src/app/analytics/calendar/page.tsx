@@ -68,7 +68,7 @@ function generateCalendarWeeks(data: DayData[], months: number = 4) {
   const weeks: CalendarCell[][] = [];
   const monthMarkers: { index: number; label: string }[] = [];
 
-  let current = new Date(startDate);
+  const current = new Date(startDate);
   let week: CalendarCell[] = [];
   let cellIndex = 0;
   let lastMonth = -1;
@@ -264,22 +264,22 @@ export default function CalendarPage() {
 
         {dataState === 'success' && (
           <>
-            <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="card card-padding">
-                <p className="stat-value text-xl">{stats.totalRuns}</p>
-                <p className="text-meta">Total runs</p>
+            <div className="mb-6 grid grid-cols-1 min-[360px]:grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="card card-padding min-w-0 overflow-hidden">
+                <p className="stat-value text-lg sm:text-xl leading-tight break-all">{stats.totalRuns}</p>
+                <p className="text-meta wrap-break-word leading-snug">Total runs</p>
               </div>
-              <div className="card card-padding">
-                <p className="stat-value text-xl">{stats.totalDays}</p>
-                <p className="text-meta">Active days</p>
+              <div className="card card-padding min-w-0 overflow-hidden">
+                <p className="stat-value text-lg sm:text-xl leading-tight break-all">{stats.totalDays}</p>
+                <p className="text-meta wrap-break-word leading-snug">Active days</p>
               </div>
-              <div className="card card-padding">
-                <p className="stat-value text-xl">{stats.totalFailed}</p>
-                <p className="text-meta">Failed runs</p>
+              <div className="card card-padding min-w-0 overflow-hidden">
+                <p className="stat-value text-lg sm:text-xl leading-tight break-all">{stats.totalFailed}</p>
+                <p className="text-meta wrap-break-word leading-snug">Failed runs</p>
               </div>
-              <div className="card card-padding">
-                <p className="stat-value text-xl">{stats.avgPerDay}</p>
-                <p className="text-meta">Avg runs / day</p>
+              <div className="card card-padding min-w-0 overflow-hidden">
+                <p className="stat-value text-lg sm:text-xl leading-tight break-all">{stats.avgPerDay}</p>
+                <p className="text-meta wrap-break-word leading-snug">Avg runs / day</p>
               </div>
             </div>
 
