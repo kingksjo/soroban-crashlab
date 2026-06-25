@@ -262,7 +262,8 @@ test.describe('Artifact Upload/Download E2E', () => {
       await fileInput.setInputFiles(filePath);
 
       // Wait for upload to complete
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle');
 
       // Verify artifact appears
       await waitForArtifactInList(page, testFileName);
@@ -371,7 +372,7 @@ test.describe('Artifact Upload/Download E2E', () => {
 
 test.describe('Artifact API Endpoints', () => {
   test('GET /api/artifacts returns proper response structure', async ({ request }) => {
-    const response = await request.get('http://localhost:3000/api/artifacts');
+    const response = await request.get('/api/artifacts');
 
     expect(response.ok()).toBeTruthy();
 
@@ -390,7 +391,7 @@ test.describe('Artifact API Endpoints', () => {
       // Prepare form data
       const fileBuffer = fs.readFileSync(filePath);
 
-      const response = await request.post('http://localhost:3000/api/artifacts', {
+      const response = await request.post('/api/artifacts', {
         multipart: {
           file: {
             name: testFileName,
@@ -414,7 +415,7 @@ test.describe('Artifact API Endpoints', () => {
   });
 
   test('artifact metadata includes required fields', async ({ request }) => {
-    const response = await request.get('http://localhost:3000/api/artifacts');
+    const response = await request.get('/api/artifacts');
 
     expect(response.ok()).toBeTruthy();
 

@@ -2,8 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import type { FuzzingRun } from '../../types';
-import AddAFuzzyQueryBuilderPage51 from '../../add-a-fuzzy-query-builder-page-51';
+import dynamic from 'next/dynamic';
 import { dedupedFetchJson } from '../../../lib/request-dedup';
+
+const AddAFuzzyQueryBuilderPage51 = dynamic(
+  () => import('../../add-a-fuzzy-query-builder-page-51'),
+  { ssr: false }
+);
 
 async function fetchRuns(): Promise<FuzzingRun[]> {
   const data = await dedupedFetchJson<{ runs?: FuzzingRun[] }>('/api/runs');

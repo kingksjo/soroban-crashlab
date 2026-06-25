@@ -3,7 +3,12 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import AddTaggingAndLabelsUi from "./add-tagging-and-labels-ui";
+import dynamic from 'next/dynamic';
+
+const AddTaggingAndLabelsUi = dynamic(
+  () => import("./add-tagging-and-labels-ui"),
+  { ssr: false }
+);
 import { runMatchesTagFilter } from "./run-tags-utils";
 import { FuzzingRun } from "./types";
 import { dedupedFetchJson } from "../lib/request-dedup";
