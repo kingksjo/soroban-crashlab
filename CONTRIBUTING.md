@@ -252,6 +252,187 @@ Also paste the exact failing command and the first relevant error block.
    release maintainer can update [`CHANGELOG.md`](CHANGELOG.md) and run the
    compatibility review in [`docs/RELEASE_PROCESS.md`](docs/RELEASE_PROCESS.md).
 
+   ## Branch and Pull Request Workflow
+
+Follow this workflow when contributing to Soroban CrashLab.
+
+### 1. Fork the repository
+
+Create your own fork of the repository using the GitHub Fork button.
+
+### 2. Clone your fork
+
+```bash
+git clone https://github.com/<your-username>/soroban-crashlab.git
+cd soroban-crashlab
+```
+
+### 3. Configure the upstream remote
+
+```bash
+git remote add upstream https://github.com/SorobanCrashLab/soroban-crashlab.git
+git remote -v
+```
+
+You should see both `origin` (your fork) and `upstream` (the main repository).
+
+### 4. Sync your local main branch
+
+Before starting work on an issue, update your local copy:
+
+```bash
+git checkout main
+git fetch upstream
+git merge upstream/main
+git push origin main
+```
+
+### 5. Create a branch
+
+Create a focused branch for a single issue.
+
+Examples:
+
+```bash
+git checkout -b feat/add-dashboard-filter
+git checkout -b fix/login-timeout
+git checkout -b docs/contribution-guidelines-pr-workflow
+```
+
+Recommended naming conventions:
+
+```text
+feat/<short-description>
+fix/<short-description>
+docs/<short-description>
+chore/<short-description>
+```
+
+### 6. Implement your changes
+
+Keep changes focused on the assigned issue.
+
+Avoid unrelated refactors or formatting-only modifications unless they are required for the task.
+
+### 7. Run verification checks
+
+For frontend changes:
+
+```bash
+cd apps/web
+npm run test
+npm run lint
+npm run build
+```
+
+For Rust changes:
+
+```bash
+cd contracts/crashlab-core
+cargo test --all-targets
+```
+
+### 8. Review your changes
+
+Check the files that were modified:
+
+```bash
+git status
+git diff
+```
+
+Ensure:
+
+* Only relevant files are modified
+* No debug code remains
+* Documentation is updated when needed
+
+### 9. Commit your work
+
+Create a clear commit message:
+
+```bash
+git add .
+git commit -m "docs: add contribution workflow guide"
+```
+
+Examples:
+
+```text
+feat: add artifact filtering
+fix: handle replay timeout edge case
+docs: expand contribution workflow guide
+```
+
+### 10. Push your branch
+
+```bash
+git push origin <branch-name>
+```
+
+Example:
+
+```bash
+git push origin docs/contribution-guidelines-pr-workflow
+```
+
+### 11. Open a Pull Request
+
+Open a pull request from your branch into the upstream repository's `main` branch.
+
+Your pull request should include:
+
+* Summary of changes
+* Testing evidence
+* Screenshots when applicable
+* Related issue reference
+
+Example:
+
+```md
+## Summary
+
+Added contribution guidelines and documented the pull request workflow.
+
+## Testing
+
+- npm run test
+- npm run lint
+- npm run build
+
+Closes #895
+```
+
+### 12. Respond to review feedback
+
+Review comments are a normal part of the process.
+
+Address feedback by making additional commits and pushing them to the same branch:
+
+```bash
+git add .
+git commit -m "Address review feedback"
+git push origin <branch-name>
+```
+
+### 13. Merge
+
+After approval and successful checks, a maintainer will merge the pull request.
+
+### Contribution Guidelines
+
+When contributing:
+
+* Keep pull requests focused on a single issue.
+* Link issues using `Closes #<issue-number>`.
+* Include test evidence for behavior changes.
+* Update documentation when user-facing behavior changes.
+* Clearly describe any API, schema, CLI, or workflow changes.
+* Keep commit messages concise and descriptive.
+* Be respectful during code review discussions.
+* Respond to reviewer feedback promptly whenever possible.
+
+
 ## Conflict of interest disclosures
 
 If you know that an issue assignment, PR review, merge, security triage, or resolution-credit decision involves a maintainer with a personal, employment, sponsor, financial, close-collaboration, direct-competition, or prior private implementation conflict, flag it early.
