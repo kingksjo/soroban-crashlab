@@ -36,9 +36,6 @@ const ledgerChanges: LedgerStateChange[] = [
 const formatBytes = (bytes: number): string => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 const formatDate = (value?: string): string => (value ? new Date(value).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }) : 'Pending');
 
-const formatBytes = (bytes: number): string => `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-const formatDate = (value?: string): string => (value ? new Date(value).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' }) : 'Pending');
-
 export default async function RunDetailPage({ params }: RunDetailPageProps) {
     const { id } = await params;
     const run = buildMockRuns().find((entry) => entry.id === id);
