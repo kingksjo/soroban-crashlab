@@ -1,16 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { FuzzingRun } from '../types';
 import { dedupedFetchJson } from '../../lib/request-dedup';
+import VirtualizedRunTable from '../implement-virtualized-run-table-component';
 
-const ITEMS_PER_PAGE = 10;
+const RUN_TABLE_COLUMNS = ['id', 'status', 'area', 'severity', 'duration', 'seedCount'];
 
 export default function RunsPage() {
+  const router = useRouter();
   const [dataState, setDataState] = useState<'loading' | 'success' | 'error'>('loading');
   const [runs, setRuns] = useState<FuzzingRun[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
+
+  const goToRun = useCallback((runId: string) => {
+    router.push(`/runs/${runId}`);
+  }, [router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,10 +40,6 @@ export default function RunsPage() {
     void load();
     return () => { cancelled = true; };
   }, []);
-
-  const totalPages = Math.max(1, Math.ceil(runs.length / ITEMS_PER_PAGE));
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedRuns = runs.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="container-full page-padding fade-in">
@@ -82,64 +84,13 @@ export default function RunsPage() {
       )}
 
       {dataState === 'success' && (
-        <div className="card table-responsive">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Run Identifier</th>
-                <th>Status</th>
-                <th className="hidden sm:table-cell">Area</th>
-                <th className="hidden sm:table-cell">Severity</th>
-                <th className="hidden md:table-cell">Duration</th>
-                <th className="hidden md:table-cell">Seeds</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedRuns.map((run) => (
-                <tr key={run.id}>
-                  <td className="code-text text-meta" style={{ maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis' }}>#{run.id.replace(/^run-/, '')}</td>
-                  <td><span className={`badge badge-${run.status}`}>{run.status}</span></td>
-                  <td className="hidden sm:table-cell">{run.area}</td>
-                  <td className="hidden sm:table-cell" style={{ color: run.severity === 'critical' ? '#C37D16' : run.severity === 'high' ? '#CC1016' : 'var(--text-primary)' }}>
-                    {run.severity}
-                  </td>
-                  <td className="hidden md:table-cell text-meta">{run.duration.toLocaleString()}ms</td>
-                  <td className="hidden md:table-cell text-meta">{run.seedCount.toLocaleString()}</td>
-                  <td>
-                    <Link href={`/runs/${run.id}`} className="link text-xs sm:text-sm whitespace-nowrap">
-                      View <span className="hidden sm:inline">Details</span> →
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {dataState === 'success' && totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between mt-4 gap-3">
-          <span className="text-meta text-xs sm:text-sm">Page {currentPage} of {totalPages}</span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="btn-outline text-xs sm:text-sm"
-              style={{ padding: '0 12px sm:0 16px', height: '32px sm:36px', fontSize: '13px sm:14px', opacity: currentPage === 1 ? 0.4 : 1 }}
-            >
-              ← Prev
-            </button>
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="btn-outline text-xs sm:text-sm"
-              style={{ padding: '0 12px sm:0 16px', height: '32px sm:36px', fontSize: '13px sm:14px', opacity: currentPage === totalPages ? 0.4 : 1 }}
-            >
-              Next →
-            </button>
-          </div>
-        </div>
+        <VirtualizedRunTable
+          runs={runs}
+          viewportHeight={600}
+          visibleColumns={RUN_TABLE_COLUMNS}
+          onSelectRun={goToRun}
+          onViewReport={(run) => goToRun(run.id)}
+        />
       )}
     </div>
   );
