@@ -255,6 +255,7 @@ const CrossRunBoardWidgets: React.FC<CrossRunBoardWidgetsProps> = ({
     return (
       <section 
         className={`cross-run-board-widgets ${className}`} 
+        role="status"
         aria-label="Loading cross-run statistics"
       >
         <div className="flex items-center gap-3 mb-6">
@@ -275,6 +276,7 @@ const CrossRunBoardWidgets: React.FC<CrossRunBoardWidgetsProps> = ({
     return (
       <section 
         className={`cross-run-board-widgets ${className}`} 
+        role="alert"
         aria-label="Cross-run statistics error"
       >
         <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-zinc-100">Cross-run Board</h2>

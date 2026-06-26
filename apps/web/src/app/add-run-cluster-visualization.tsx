@@ -262,7 +262,7 @@ const RunClusterVisualization: React.FC<RunClusterVisualizationProps> = ({
 
   if (dataState === "error") {
     return (
-      <section className="run-cluster-visualization p-8 border border-red-200 dark:border-red-900/30 bg-red-50/50 dark:bg-red-950/20 rounded-2xl">
+      <section role="alert" className="run-cluster-visualization p-8 border border-red-200 dark:border-red-900/30 bg-red-50/50 dark:bg-red-950/20 rounded-2xl">
         <h2 className="text-xl font-bold text-red-900 dark:text-red-100 mb-2">Cluster Visualization Error</h2>
         <p className="text-red-700 dark:text-red-300 mb-4">{errorMessage || "Failed to load cluster data."}</p>
         <button

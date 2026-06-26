@@ -57,7 +57,7 @@ export default function RunsPage() {
       </div>
 
       {dataState === 'loading' && (
-        <div className="card card-padding">
+        <div role="status" aria-live="polite" className="card card-padding">
           <div className="space-y-3 sm:space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex gap-2 sm:gap-4">
@@ -73,7 +73,7 @@ export default function RunsPage() {
       )}
 
       {dataState === 'error' && (
-        <div className="card card-padding text-center py-8 sm:py-12" style={{ borderLeft: '4px solid #CC1016' }}>
+        <div role="alert" className="card card-padding text-center py-8 sm:py-12" style={{ borderLeft: '4px solid #CC1016' }}>
           <span className="text-2xl sm:text-3xl mb-2 sm:mb-3 block">⚠</span>
           <p className="font-semibold" style={{ color: '#CC1016' }}>Failed to load fuzzing runs</p>
           <p className="text-meta mt-1 mb-3 sm:mb-4">Check your connection and try again.</p>
