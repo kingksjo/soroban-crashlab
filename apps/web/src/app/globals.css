@@ -28,7 +28,7 @@
   --color-text-secondary: #666666;
   --color-border: #E0DFDC;
   --color-success: #057642;
-  --color-warning: #C37D16;
+  --color-warning: #946210;
   --color-error: #CC1016;
 }
 
@@ -60,7 +60,7 @@
   --card-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 2px 4px rgba(0, 0, 0, 0.3);
   --card-shadow-hover: 0 0 0 1px rgba(0, 255, 65, 0.08), 0 4px 12px rgba(0, 0, 0, 0.4);
   --input-bg: #0a0a0a;
-  --input-border: #2a2a2a;
+  --input-border: #606060;
   --skeleton-from: #1a1a1a;
   --skeleton-to: #111111;
   --chip-bg: #1a1a1a;
@@ -335,7 +335,15 @@ body {
 
 .badge-critical {
   background: rgba(195, 125, 22, 0.1);
-  color: #C37D16;
+  color: #946210;
+}
+
+.dark .badge-completed {
+  color: #229B6B;
+}
+
+.dark .badge-failed {
+  color: #EF4444;
 }
 
 .link {

@@ -288,7 +288,7 @@ const RunClusterVisualization: React.FC<RunClusterVisualizationProps> = ({
           <p className="text-zinc-500 dark:text-zinc-400 font-medium">
             No cluster data available.
           </p>
-          <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-1">
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
             Start a new campaign to see cluster visualization.
           </p>
         </div>
