@@ -137,7 +137,7 @@ export function generatePreviewContent(artifact: Artifact): string {
  * Loading skeleton component for artifact preview
  */
 const ArtifactPreviewSkeleton: React.FC = () => (
-  <div className="animate-pulse">
+  <div role="status" aria-label="Loading artifact preview" className="animate-pulse">
     <div className="mb-4 pr-8">
       <div className="h-6 w-48 bg-zinc-300 dark:bg-zinc-700 rounded mb-2"></div>
       <div className="flex gap-2 mb-3">
@@ -164,7 +164,7 @@ const ArtifactPreviewError: React.FC<{ onRetry?: () => void; errorMessage?: stri
   onRetry,
   errorMessage = "Failed to load artifact preview",
 }) => (
-  <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+  <div role="alert" className="flex flex-col items-center justify-center py-12 px-6 text-center">
     <div className="w-16 h-16 mb-4 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
       <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path

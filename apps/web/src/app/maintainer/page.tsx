@@ -121,7 +121,7 @@ export default function MaintainerPage() {
 
         {/* Loading State */}
         {dataState === "loading" && (
-          <div className="w-full space-y-6">
+          <div role="status" aria-live="polite" className="w-full space-y-6">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
@@ -133,7 +133,7 @@ export default function MaintainerPage() {
 
         {/* Error State */}
         {dataState === "error" && (
-          <div className="w-full border border-red-200 dark:border-red-900/50 rounded-2xl p-8 bg-red-50/60 dark:bg-red-950/20 text-center">
+          <div role="alert" className="w-full border border-red-200 dark:border-red-900/50 rounded-2xl p-8 bg-red-50/60 dark:bg-red-950/20 text-center">
             <div className="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center mx-auto mb-4">
               <svg
                 className="h-6 w-6 text-red-600 dark:text-red-400"

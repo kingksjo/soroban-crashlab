@@ -84,13 +84,13 @@ function DashboardContent() {
       </div>
 
       {dataState === "error" && (
-        <div className="card card-padding mb-4 sm:mb-6" style={{ borderLeft: "4px solid #CC1016" }}>
+        <div role="alert" className="card card-padding mb-4 sm:mb-6" style={{ borderLeft: "4px solid #CC1016" }}>
           <p className="font-semibold" style={{ color: "#CC1016" }}>Connection Error</p>
         </div>
       )}
 
       {dataState === "loading" && (
-        <div className="card card-padding flex items-center justify-center py-8">
+        <div role="status" aria-live="polite" className="card card-padding flex items-center justify-center py-8">
           <span className="text-meta">Loading data...</span>
         </div>
       )}
