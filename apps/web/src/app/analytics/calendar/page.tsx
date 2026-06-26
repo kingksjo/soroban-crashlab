@@ -254,7 +254,7 @@ export default function CalendarPage() {
         </div>
 
         {dataState === 'loading' && (
-          <div className="card card-padding flex items-center justify-center py-16">
+          <div role="status" aria-live="polite" className="card card-padding flex items-center justify-center py-16">
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#0A66C2', borderTopColor: 'transparent' }} />
               <span className="text-meta">Loading run data...</span>
