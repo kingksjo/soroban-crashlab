@@ -2,6 +2,21 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Global focus-visible indicator for all interactive elements.
+ * Provides a consistent 2px blue ring so keyboard users always
+ * know which element is focused.  Uses :focus-visible so the
+ * ring only appears on keyboard navigation, not on clicks.
+ */
+:where(a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid #0A66C2;
+  outline-offset: 2px;
+}
+
+.dark :where(a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline-color: #5AA7F0;
+}
+
 @theme {
   --color-primary: #0A66C2;
   --color-primary-hover: #004182;
@@ -187,6 +202,12 @@ body {
   background: #004182;
 }
 
+.btn-primary:focus-visible {
+  outline: 2px solid #004182;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(10, 102, 194, 0.2);
+}
+
 .btn-primary:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -214,6 +235,12 @@ body {
   background: rgba(10, 102, 194, 0.05);
 }
 
+.btn-outline:focus-visible {
+  outline: 2px solid #0A66C2;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(10, 102, 194, 0.2);
+}
+
 .btn-ghost {
   display: inline-flex;
   align-items: center;
@@ -234,6 +261,12 @@ body {
 
 .btn-ghost:hover {
   background: rgba(10, 102, 194, 0.05);
+}
+
+.btn-ghost:focus-visible {
+  outline: 2px solid #0A66C2;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(10, 102, 194, 0.2);
 }
 
 .input-field {
