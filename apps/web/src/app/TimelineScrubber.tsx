@@ -119,8 +119,9 @@ export default function TimelineScrubber({
               disabled={index <= 0}
               className="p-2 rounded-lg hover:bg-white dark:hover:bg-zinc-800 disabled:opacity-30 transition-all active:scale-90"
               title="Previous Run"
+              aria-label="Previous run"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -129,8 +130,9 @@ export default function TimelineScrubber({
               disabled={index >= runs.length - 1}
               className="p-2 rounded-lg hover:bg-white dark:hover:bg-zinc-800 disabled:opacity-30 transition-all active:scale-90"
               title="Next Run"
+              aria-label="Next run"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
